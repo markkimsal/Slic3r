@@ -94,7 +94,9 @@ sub extrude_loop {
 sub extrude_path {
     my $self = shift;
     my ($path, $description, $recursive) = @_;
-    
+    my ($old_desc, $old_rate);
+    my $line_count = 0;
+
     $path->merge_continuous_lines;
     
     # detect arcs
@@ -156,12 +158,36 @@ sub extrude_path {
             : $path->role eq 'bridge'           ? $self->bridge_speed
             : die "Unknown role: " . $path->role
     );
+
+
+    $old_desc = $description;
+    $old_rate = $self->print_feed_rate;
+    $line_count = 0;
     if ($path->isa('Slic3r::ExtrusionPath::Arc')) {
         $gcode .= $self->G2_G3($path->points->[-1], $path->orientation, 
             $path->center, $e * $path->length, $description);
     } else {
         foreach my $line ($path->lines) {
+            $line_count++;
+            # anti vibration
+            if ($path->role =~ /fill/ and $Slic3r::vibration_move_threshold)
+            {
+
+                my $distance_from_last_pos = $self->last_pos->distance_to($line->b) * $Slic3r::resolution;
+                if ($distance_from_last_pos < $Slic3r::vibration_move_threshold)
+                {
+                    $self->print_feed_rate( $old_rate * ((($Slic3r::vibration_move_threshold - $distance_from_last_pos) /$Slic3r::vibration_move_threshold) * $Slic3r::vibration_speed_ratio) );
+                    $description = sprintf "anti vibration. path line:  %d, %.4f, %.4f", $line_count, $distance_from_last_pos, $e;
+                    #$description = $old_desc . sprintf " path line: %d, %d, %.10f ", $line_count, $distance_from_last_pos, $e;
+
+                } else {
+                    $self->print_feed_rate( $old_rate );
+                    $description = $old_desc . sprintf " path line: %d, %d, %.10f ", $line_count, $distance_from_last_pos, $e;
+                }
+            }
+            if ($e > 0) {
             $gcode .= $self->G1($line->b, undef, $e * $line->length, $description);
+            }
         }
     }
     

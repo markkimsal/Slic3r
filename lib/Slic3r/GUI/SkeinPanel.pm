@@ -66,6 +66,11 @@ sub new {
             title => 'Output',
             options => [qw(output_filename_format)],
         },
+        vibration => {
+            title => 'Anti-Vibration',
+            options => [qw(vibration_move_threshold vibration_speed_ratio)],
+        },
+
     );
     $self->{panels} = \%panels;
     
@@ -92,7 +97,7 @@ sub new {
         $make_tab->([qw(transform accuracy skirt)], [qw(print retract)]),
         $make_tab->([qw(printer filament)], [qw(print_speed speed)]),
         $make_tab->([qw(gcode)]),
-        $make_tab->([qw(extrusion)], [qw(output)]),
+        $make_tab->([qw(extrusion)], [qw(output)], [qw(vibration)]),
     );
     
     $tabpanel->AddPage($tabs[0], "Print Settings");

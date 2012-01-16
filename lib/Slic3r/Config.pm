@@ -206,7 +206,19 @@ our $Options = {
         serialize   => sub { join '\n', split /\R+/, $_[0] },
         deserialize => sub { join "\n", split /\\n/, $_[0] },
     },
-    
+
+    #anti-vibration options
+    'vibration_move_threshold' => {
+        label   => 'Threshold for enabling anti-vibration  (mm)',
+        cli     => 'vibration_move_threshold=i',
+        type    => 'i',
+    },
+    'vibration_speed_ratio' => {
+        label   => 'Maximum speed to reduction ratio (%)',
+        cli     => 'vibration-speed-ratio=f',
+        type    => 'i',
+    },
+
     # retraction options
     'retract_length' => {
         label   => 'Length (mm)',
